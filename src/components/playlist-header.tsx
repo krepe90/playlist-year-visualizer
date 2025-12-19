@@ -45,10 +45,9 @@ export function PlaylistHeader({
         </p>
         <h1 className="text-2xl font-bold truncate">{playlist.name}</h1>
         {playlist.description && (
-          <p
-            className="text-sm text-muted-foreground mt-1 line-clamp-2"
-            dangerouslySetInnerHTML={{ __html: playlist.description }}
-          />
+          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+            {playlist.description}
+          </p>
         )}
         <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
           <span>{playlist.owner.display_name || "Unknown"}</span>
