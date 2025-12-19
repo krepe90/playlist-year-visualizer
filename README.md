@@ -6,7 +6,7 @@ Spotify 플레이리스트의 트랙들을 발매 연도별로 시각화하는 �
 
 - Next.js 16
 - React 19
-- NextAuth.js (Spotify OAuth)
+- Better Auth (Spotify OAuth)
 - Recharts (차트 시각화)
 - Tailwind CSS
 - shadcn/ui
