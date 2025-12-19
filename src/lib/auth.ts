@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
-import Database from "better-sqlite3";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { db, schema } from "@/db";
 
 const clientId = process.env.SPOTIFY_CLIENT_ID;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
@@ -18,7 +19,10 @@ const SPOTIFY_SCOPES = [
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   secret: process.env.BETTER_AUTH_SECRET,
-  database: new Database(process.env.DATABASE_PATH || "./sqlite.db"),
+  database: drizzleAdapter(db, {
+    provider: "sqlite",
+    schema,
+  }),
   socialProviders: {
     spotify: {
       clientId,
