@@ -16,6 +16,7 @@ export interface PlaylistMeta {
   description: string | null;
   images: SpotifyImage[];
   owner: SpotifyUser;
+  public: boolean | null;
   tracks: {
     total: number;
   };
@@ -90,6 +91,7 @@ export interface SpotifyPlaylistResponse {
   description: string | null;
   images: SpotifyImage[];
   owner: SpotifyUser;
+  public: boolean | null;
   tracks: {
     total: number;
     items: SpotifyTrackItem[];

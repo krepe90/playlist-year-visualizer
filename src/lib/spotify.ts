@@ -191,6 +191,7 @@ export async function fetchPlaylist(
       id: playlist.owner.id,
       display_name: playlist.owner.display_name,
     },
+    public: playlist.public,
     tracks: {
       total: totalTracks,
     },

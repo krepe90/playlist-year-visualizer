@@ -41,7 +41,7 @@ export function PlaylistHeader({
 
       <div className="flex flex-col justify-center min-w-0">
         <p className="text-xs uppercase text-muted-foreground font-medium">
-          플레이리스트
+          {playlist.public ? "공개" : "비공개"} 플레이리스트
         </p>
         <h1 className="text-2xl font-bold truncate">{playlist.name}</h1>
         {playlist.description && (
