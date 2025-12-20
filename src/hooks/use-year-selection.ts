@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { Selection, Track, YearStats } from "@/lib/types";
+import { Selection, Track } from "@/lib/types";
 
-export function useYearSelection(tracks: Track[], yearStats: YearStats[]) {
+export function useYearSelection(tracks: Track[]) {
   const [selection, setSelection] = useState<Selection | null>(null);
 
   const handleYearClick = useCallback(

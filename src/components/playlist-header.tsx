@@ -16,8 +16,8 @@ export function PlaylistHeader({
   trackCount,
 }: PlaylistHeaderProps) {
   return (
-    <div className="flex gap-4 p-4 bg-gradient-to-b from-muted/50 to-background rounded-lg">
-      <div className="flex-shrink-0 w-32 h-32 rounded-md overflow-hidden bg-muted shadow-lg">
+    <div className="flex gap-4 p-4 bg-linear-to-b from-muted/50 to-background rounded-lg">
+      <div className="shrink-0 w-32 h-32 rounded-md overflow-hidden bg-muted shadow-lg">
         {playlist.images?.[0]?.url ? (
           <Image
             src={playlist.images[0].url}

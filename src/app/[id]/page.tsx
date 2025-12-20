@@ -28,10 +28,7 @@ export default function PlaylistPage() {
     clearSelection,
     selectedYears,
     filteredTracks,
-  } = useYearSelection(
-    playlistData?.tracks || [],
-    playlistData?.yearStats || []
-  );
+  } = useYearSelection(playlistData?.tracks || []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 

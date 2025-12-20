@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import {
   BarChart,
   Bar,
@@ -42,20 +42,23 @@ export function YearHistogram({
     return data;
   }, [yearStats]);
 
-  const isYearSelected = (year: number) => {
-    if (!selection) return false;
-    if (selection.end === null) {
-      return year === selection.start;
-    }
-    return year >= selection.start && year <= selection.end;
-  };
+  const isYearSelected = useCallback(
+    (year: number) => {
+      if (!selection) return false;
+      if (selection.end === null) {
+        return year === selection.start;
+      }
+      return year >= selection.start && year <= selection.end;
+    },
+    [selection]
+  );
 
   const selectedCount = useMemo(() => {
     if (!selection) return 0;
     return yearStats
       .filter((s) => isYearSelected(s.year))
       .reduce((sum, s) => sum + s.count, 0);
-  }, [selection, yearStats]);
+  }, [selection, yearStats, isYearSelected]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleClick = (data: any) => {
@@ -69,7 +72,7 @@ export function YearHistogram({
 
   return (
     <div className="w-full">
-      <div className="h-[250px]">
+      <div className="h-62.5">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}

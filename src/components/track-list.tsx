@@ -57,7 +57,7 @@ export function TrackList({ tracks, highlightYears }: TrackListProps) {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 flex-shrink-0 rounded overflow-hidden bg-muted hidden sm:block">
+                    <div className="w-10 h-10 shrink-0 rounded overflow-hidden bg-muted hidden sm:block">
                       {track.album.images?.[0]?.url ? (
                         <Image
                           src={track.album.images[track.album.images.length - 1]?.url || track.album.images[0].url}

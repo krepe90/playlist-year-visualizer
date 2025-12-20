@@ -21,26 +21,38 @@ export function MyPlaylists({ onSelect }: MyPlaylistsProps) {
   const userId = session?.user?.id;
 
   useEffect(() => {
-    if (userId) {
-      setIsLoading(true);
-      setError(null);
+    if (!userId) return;
 
-      fetch("/api/me/playlists")
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.error) {
-            setError(data.error);
-          } else {
-            setPlaylists(data.playlists || []);
-          }
-        })
-        .catch(() => {
+    let cancelled = false;
+
+    const fetchPlaylists = async () => {
+      try {
+        const res = await fetch("/api/me/playlists");
+        const data = await res.json();
+        if (cancelled) return;
+        if (data.error) {
+          setError(data.error);
+        } else {
+          setPlaylists(data.playlists || []);
+        }
+      } catch {
+        if (!cancelled) {
           setError("플레이리스트를 불러오는데 실패했습니다");
-        })
-        .finally(() => {
+        }
+      } finally {
+        if (!cancelled) {
           setIsLoading(false);
-        });
-    }
+        }
+      }
+    };
+
+    setIsLoading(true);
+    setError(null);
+    fetchPlaylists();
+
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   if (!session) {
@@ -76,7 +88,7 @@ export function MyPlaylists({ onSelect }: MyPlaylistsProps) {
         <div className="flex gap-3 pb-4">
           {isLoading
             ? Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i} className="flex-shrink-0 w-[140px]">
+                <Card key={i} className="shrink-0 w-35">
                   <CardContent className="p-3">
                     <Skeleton className="w-full aspect-square rounded-md mb-2" />
                     <Skeleton className="h-4 w-full mb-1" />
@@ -87,7 +99,7 @@ export function MyPlaylists({ onSelect }: MyPlaylistsProps) {
             : playlists.map((playlist) => (
                 <Card
                   key={playlist.id}
-                  className="flex-shrink-0 w-[140px] cursor-pointer hover:bg-accent transition-colors"
+                  className="shrink-0 w-35 cursor-pointer hover:bg-accent transition-colors"
                   onClick={() => onSelect(playlist.id)}
                 >
                   <CardContent className="p-3">
