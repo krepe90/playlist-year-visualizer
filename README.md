@@ -27,6 +27,14 @@ npm run dev
 ```
 SPOTIFY_CLIENT_ID=your_client_id
 SPOTIFY_CLIENT_SECRET=your_client_secret
+
 BETTER_AUTH_URL=http://127.0.0.1:3000
 BETTER_AUTH_SECRET=your_secret
+
+# Production URL
+NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000
+
+# betterauth 데이터베이스 설정
+TURSO_DATABASE_URL=file:./sqlite.db
+TURSO_AUTH_TOKEN=
 ```
