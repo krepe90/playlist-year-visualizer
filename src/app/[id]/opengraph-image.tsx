@@ -47,7 +47,15 @@ interface SpotifyTracksResponse {
   next: string | null;
 }
 
+// Token cache with expiry
+let tokenCache: { token: string; expiresAt: number } | null = null;
+
 async function getClientCredentialsToken(): Promise<string> {
+  // Return cached token if still valid (with 5 min buffer)
+  if (tokenCache && Date.now() < tokenCache.expiresAt - 300000) {
+    return tokenCache.token;
+  }
+
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 
@@ -64,6 +72,7 @@ async function getClientCredentialsToken(): Promise<string> {
       Authorization: `Basic ${credentials}`,
     },
     body: "grant_type=client_credentials",
+    cache: "no-store", // Token requests should not be cached by Next.js
   });
 
   if (!response.ok) {
@@ -71,6 +80,10 @@ async function getClientCredentialsToken(): Promise<string> {
   }
 
   const data: SpotifyTokenResponse = await response.json();
+  tokenCache = {
+    token: data.access_token,
+    expiresAt: Date.now() + data.expires_in * 1000,
+  };
   return data.access_token;
 }
 
@@ -88,6 +101,7 @@ async function fetchPlaylistForOG(playlistId: string): Promise<PlaylistDataForOG
     `${SPOTIFY_API_BASE}/playlists/${playlistId}`,
     {
       headers: { Authorization: `Bearer ${token}` },
+      next: { revalidate: 3600 }, // Cache for 1 hour
     }
   );
 
@@ -116,25 +130,35 @@ async function fetchPlaylistForOG(playlistId: string): Promise<PlaylistDataForOG
     processItems(playlist.tracks.items);
   }
 
-  // Fetch remaining tracks
+  // Fetch remaining tracks in parallel
   const totalTracks = playlist.tracks?.total || 0;
-  let offset = playlist.tracks?.items?.length || 0;
+  const initialOffset = playlist.tracks?.items?.length || 0;
+  const limit = 100;
 
-  while (offset < totalTracks) {
-    const tracksResponse = await fetch(
-      `${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks?limit=100&offset=${offset}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+  if (initialOffset < totalTracks) {
+    const offsets: number[] = [];
+    for (let offset = initialOffset; offset < totalTracks; offset += limit) {
+      offsets.push(offset);
+    }
 
-    if (!tracksResponse.ok) break;
+    const fetchPromises = offsets.map(async (offset) => {
+      const tracksResponse = await fetch(
+        `${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks?limit=${limit}&offset=${offset}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          next: { revalidate: 3600 }, // Cache for 1 hour
+        }
+      );
 
-    const tracksData: SpotifyTracksResponse = await tracksResponse.json();
-    if (!tracksData.items?.length) break;
+      if (!tracksResponse.ok) return null;
+      const tracksData: SpotifyTracksResponse = await tracksResponse.json();
+      return tracksData.items || [];
+    });
 
-    processItems(tracksData.items);
-    offset += tracksData.items.length;
+    const results = await Promise.all(fetchPromises);
+    for (const items of results) {
+      if (items) processItems(items);
+    }
   }
 
   const yearStats: YearStats[] = Array.from(yearMap.entries())
@@ -197,13 +221,21 @@ function FallbackImage() {
   );
 }
 
+// Module-level font cache for edge worker reuse
+let cachedFont: ArrayBuffer | null = null;
+
 async function loadFont(): Promise<ArrayBuffer> {
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
+  if (cachedFont) return cachedFont;
+
+  const baseUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000";
 
   const response = await fetch(`${baseUrl}/fonts/Pretendard-SemiBold.otf`);
-  return response.arrayBuffer();
+  cachedFont = await response.arrayBuffer();
+  return cachedFont;
 }
 
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
@@ -263,6 +295,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
             {playlistImageUrl ? (
               <img
                 src={playlistImageUrl}
+                alt=""
                 width={140}
                 height={140}
                 style={{
@@ -420,6 +453,9 @@ export default async function Image({ params }: { params: Promise<{ id: string }
       ),
       {
         ...size,
+        headers: {
+          "Cache-Control": "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+        },
         fonts: [
           {
             name: "Pretendard",
@@ -435,6 +471,9 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 
     return new ImageResponse(<FallbackImage />, {
       ...size,
+      headers: {
+        "Cache-Control": "public, max-age=60, s-maxage=60", // Shorter cache for errors
+      },
       fonts: [
         {
           name: "Pretendard",
